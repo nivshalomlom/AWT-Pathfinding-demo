@@ -1,5 +1,6 @@
-import java.util.function.BiFunction;
-
+/**
+ * A class that contains implementations of pathfinding algorithms
+ */
 public class PathfindingAlgorithms {
 
     // constants
@@ -44,15 +45,22 @@ public class PathfindingAlgorithms {
     /**
      * A implementation of the 'depth first search' pathfinding algorithm
      * @param grid - the grid to work on
-     * @param source - the start/source point to work from
      * @return true if found path, false otherwise (marks path on grid if found)
+     * @throws Exception if source or destination is not defined
      */
+    public static Boolean DFS(Grid grid) throws Exception {
+        if (grid.getSource() == null || grid.getDestination() == null)
+            throw new Exception("Cannot run the DFS algorithm without source and destination points!");
+        else return DFS_code(grid, grid.getSource());
+    }
+
+    // the algorithm recursive code
     public static Boolean DFS_code(Grid grid, int[] source) {
         // if destination is found return true
         if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.DESTINATION)
             return true;
         // else mark tile as visited
-        if (grid.getTileType(source[0], source[1]) != Grid.TILE_TYPES.SOURCE)
+        if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.EMPTY)
             grid.setTileType(source[0], source[1], Grid.TILE_TYPES.VISITED);
         // randomize search order
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
@@ -61,12 +69,12 @@ public class PathfindingAlgorithms {
         for (DIRECTION direction : directions) {
             int[] neighbor = getNeighbor(source, direction);
             // check neighbor tile is traversable
-            Grid.TILE_TYPES neighbor_type = grid.getTileType(neighbor[0], neighbor[1]);
-            if (!grid.isInGrid(neighbor[0], neighbor[1]) || neighbor_type == Grid.TILE_TYPES.WALL || neighbor_type == Grid.TILE_TYPES.VISITED)
+            if (!grid.isInGrid(neighbor[0], neighbor[1]) || (grid.getTileType(neighbor[0], neighbor[1]) != Grid.TILE_TYPES.EMPTY && grid.getTileType(neighbor[0], neighbor[1]) != Grid.TILE_TYPES.DESTINATION))
                 continue;
             // go to neighbor and return true if destination found
             if (DFS_code(grid, neighbor)) {
-                grid.setTileType(source[0], source[1], Grid.TILE_TYPES.PATH);
+                if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.VISITED)
+                    grid.setTileType(source[0], source[1], Grid.TILE_TYPES.PATH);
                 return true;
             }
         }

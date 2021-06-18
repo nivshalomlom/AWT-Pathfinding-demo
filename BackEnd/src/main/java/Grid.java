@@ -1,3 +1,6 @@
+/**
+ * A class to represent the grid the pathfinding will take place on
+ */
 public class Grid {
 
     // enum of grid tile types
@@ -23,7 +26,7 @@ public class Grid {
      * @param height - the desired height of the grid
      */
     public Grid(int width, int height) {
-        resetGrid();
+        setupGrid(width, height);
     }
 
     /**
@@ -84,9 +87,9 @@ public class Grid {
     /**
      * A method to reset the grid
      */
-    private void resetGrid() {
+    private void setupGrid(int width, int height) {
         // create a new grid and fill it with empty tiles
-        this.grid = new TILE_TYPES[this.getWidth()][this.getHeight()];
+        this.grid = new TILE_TYPES[width][height];
         for (int i = 0; i < this.getWidth(); i++)
             for (int j = 0; j < this.getHeight(); j++)
                 this.grid[i][j] = TILE_TYPES.EMPTY;
@@ -105,10 +108,12 @@ public class Grid {
 
     /**
      * A method set return the source point that the pathfinding algorithm will start from
-     * @param source - start point for the pathfinding algorithm
+     * @param x - start width coordinate for the pathfinding algorithm
+     * @param y - start height coordinate for the pathfinding algorithm
      */
-    public void setSource(int[] source) {
-        this.source = source;
+    public void setSource(int x, int y) {
+        this.source = new int[] {x, y};
+        this.setTileType(x, y, TILE_TYPES.SOURCE);
     }
 
     /**
@@ -121,10 +126,22 @@ public class Grid {
 
     /**
      * A method set return the destination point that the pathfinding algorithm will try to reach
-     * @param destination - end point for the pathfinding algorithm
+     * @param x - end width coordinate for the pathfinding algorithm
+     * @param y - end height coordinate for the pathfinding algorithm
      */
-    public void setDestination(int[] destination) {
-        this.destination = destination;
+    public void setDestination(int x, int y) {
+        this.destination = new int[] {x, y};
+        this.setTileType(x, y, TILE_TYPES.DESTINATION);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+        for (int j = this.getHeight() - 1; j > -1; j--) {
+            for (int i = 0; i < this.getWidth(); i++)
+                output.append(this.getTileType(i, j)).append(" ");
+            output.append("\n");
+        }
+        return output.toString();
+    }
 }
