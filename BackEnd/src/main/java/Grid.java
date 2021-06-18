@@ -1,5 +1,3 @@
-import java.util.InputMismatchException;
-
 public class Grid {
 
     // enum of grid tile types
@@ -8,11 +6,16 @@ public class Grid {
         SOURCE,
         DESTINATION,
         EMPTY,
-        VISITED
+        VISITED,
+        PATH
     }
 
     // the grid we will use for path finding
     private TILE_TYPES[][] grid;
+
+    // source and destination points
+    private int[] source;
+    private int[] destination;
 
     /**
      * A constructor to create a new grid of given dimensions
@@ -57,14 +60,11 @@ public class Grid {
      * @param x - the width index
      * @param y - the height index
      * @param tile_type - the type to set the tile to
-     * @throws InputMismatchException - if the tile_type received is visited, tiles cannot be set to visited
      * @throws IndexOutOfBoundsException - if the given point (x, y) is not in the grid
      */
-    public void setTileType(int x, int y, TILE_TYPES tile_type) throws InputMismatchException {
+    public void setTileType(int x, int y, TILE_TYPES tile_type) throws IndexOutOfBoundsException {
         if (!this.isInGrid(x, y))
             throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
-        if (tile_type == TILE_TYPES.VISITED)
-            throw new InputMismatchException("Tiles can only be set as visited by the algorithm!");
         this.grid[x][y] = tile_type;
     }
 
@@ -90,6 +90,40 @@ public class Grid {
         for (int i = 0; i < this.getWidth(); i++)
             for (int j = 0; j < this.getHeight(); j++)
                 this.grid[i][j] = TILE_TYPES.EMPTY;
+        // delete source and destination
+        this.source = null;
+        this.destination = null;
     }
 
+    /**
+     * A method to return the source point that the pathfinding algorithm will start from
+     * @return the source(start point) for the pathfinding algorithm
+     */
+    public int[] getSource() {
+        return source;
+    }
+
+    /**
+     * A method set return the source point that the pathfinding algorithm will start from
+     * @param source - start point for the pathfinding algorithm
+     */
+    public void setSource(int[] source) {
+        this.source = source;
+    }
+
+    /**
+     * A method to return the destination point that the pathfinding algorithm will try to reach
+     * @return the destination(end point) for the pathfinding algorithm
+     */
+    public int[] getDestination() {
+        return destination;
+    }
+
+    /**
+     * A method set return the destination point that the pathfinding algorithm will try to reach
+     * @param destination - end point for the pathfinding algorithm
+     */
+    public void setDestination(int[] destination) {
+        this.destination = destination;
+    }
 }
