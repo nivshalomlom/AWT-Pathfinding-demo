@@ -6,10 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="FrontEnd" />
+        <module name="BackEnd" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="BackEnd" target="14" />
       <module name="BackendLogic" target="14" />
+      <module name="FrontEnd" target="14" />
     </bytecodeTargetLevel>
   </component>
 </project>
