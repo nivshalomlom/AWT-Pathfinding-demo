@@ -1,3 +1,5 @@
+import java.util.InputMismatchException;
+
 public class Grid {
 
     // enum of grid tile types
@@ -5,7 +7,8 @@ public class Grid {
         WALL,
         SOURCE,
         DESTINATION,
-        EMPTY
+        EMPTY,
+        VISITED
     }
 
     // the grid we will use for path finding
@@ -53,10 +56,29 @@ public class Grid {
      * (every tile's default value if empty)
      * @param x - the width index
      * @param y - the height index
-     * @param tile_type - the type to set the tile to: WALL/SOURCE/DESTINATION/EMPTY
+     * @param tile_type - the type to set the tile to
+     * @throws InputMismatchException - if the tile_type received is visited, tiles cannot be set to visited
+     * @throws IndexOutOfBoundsException - if the given point (x, y) is not in the grid
      */
-    public void setTileType(int x, int y, TILE_TYPES tile_type) {
+    public void setTileType(int x, int y, TILE_TYPES tile_type) throws InputMismatchException {
+        if (!this.isInGrid(x, y))
+            throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
+        if (tile_type == TILE_TYPES.VISITED)
+            throw new InputMismatchException("Tiles can only be set as visited by the algorithm!");
         this.grid[x][y] = tile_type;
+    }
+
+    /**
+     * Returns the type of the cell in the given set of coordinates
+     * @param x - the width index
+     * @param y - the height index
+     * @return the type of the cell in the (x, y) location in the grid
+     * @throws IndexOutOfBoundsException - if the given point (x, y) is not in the grid
+     */
+    public TILE_TYPES getTileType(int x, int y) {
+        if (!this.isInGrid(x, y))
+            throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
+        return this.grid[x][y];
     }
 
     /**
