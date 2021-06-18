@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\BackEnd\src\main\java\UtilityMethods.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

@@ -1,59 +1,76 @@
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public class PathfindingAlgorithms {
 
     // constants
-    private static final PathfindingAlgorithms DFS = new PathfindingAlgorithms(PathfindingAlgorithms::DFS_code, "DFS");
-
-    // The algorithm method
-    private final BiFunction<Grid, int[], Boolean> algorithm;
-
-    // The algorithm name
-    private final String name;
-
-    /**
-     * A private constructor to create a new pathfinding algorithm <br>
-     * (the constructor is private because this class should be mainly constants)
-     * @param algorithm - the code of the algorithm, a method that accepts a grid and path finding in it
-     * @param name - the name of the algorithm
-     */
-    private PathfindingAlgorithms(BiFunction<Grid, int[], Boolean> algorithm, String name) {
-        this.algorithm = algorithm;
-        this.name = name;
+    private enum DIRECTION {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
     }
 
-    // TODO find a way to randomize directions efficiently
+    /**
+     * A method to get the neighbor of a source from a given direction
+     * @param source - the source tile
+     * @param direction - the neighbor direction (UP/DOWN/RIGHT/LEFT)
+     * @return a array containing the coordinates of the neighbor from the given direction (returns the source if direction is null)
+     */
+    private static int[] getNeighbor(int[] source, DIRECTION direction)  {
+        int[] neighbor = new int[] {source[0], source[1]};
+        switch (direction) {
+            case RIGHT -> {
+                neighbor[0]++;
+                return neighbor;
+            }
+            case LEFT -> {
+                neighbor[0]--;
+                return neighbor;
+            }
+            case UP -> {
+                neighbor[1]++;
+                return neighbor;
+            }
+            case DOWN -> {
+                neighbor[1]--;
+                return neighbor;
+            }
+            default -> {
+                return source;
+            }
+        }
+    }
 
-    private static final List<int[]> DIRECTIONS = Arrays.asList(new int[] {1, 0}, new int[] {-1, 0}, new int[] {0, 1}, new int[] {0, -1});
-
-    private static Boolean DFS_code(Grid grid, int[] source) {
-        // check if destination is reached
-        int[] destination = grid.getDestination();
-        if (source[0] == destination[0] && source[1] == destination[1])
+    /**
+     * A implementation of the 'depth first search' pathfinding algorithm
+     * @param grid - the grid to work on
+     * @param source - the start/source point to work from
+     * @return true if found path, false otherwise (marks path on grid if found)
+     */
+    public static Boolean DFS_code(Grid grid, int[] source) {
+        // if destination is found return true
+        if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.DESTINATION)
             return true;
-
-        // keep looking
-        for (int[] direction : DIRECTIONS) {
-            int[] neighbor = new int[] {source[0] + direction[0], source[1] + direction[1]};
-
-            if (!grid.isInGrid(neighbor[0], neighbor[1])
-                    || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.VISITED
-                    || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.WALL)
-                continue;
-
-            // mark neighbor tile as visited
+        // else mark tile as visited
+        if (grid.getTileType(source[0], source[1]) != Grid.TILE_TYPES.SOURCE)
             grid.setTileType(source[0], source[1], Grid.TILE_TYPES.VISITED);
-
-            // go to neighbor tile
+        // randomize search order
+        DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
+        UtilityMethods.shuffleArray(directions);
+        // check nearby tiles
+        for (DIRECTION direction : directions) {
+            int[] neighbor = getNeighbor(source, direction);
+            // check neighbor tile is traversable
+            Grid.TILE_TYPES neighbor_type = grid.getTileType(neighbor[0], neighbor[1]);
+            if (!grid.isInGrid(neighbor[0], neighbor[1]) || neighbor_type == Grid.TILE_TYPES.WALL || neighbor_type == Grid.TILE_TYPES.VISITED)
+                continue;
+            // go to neighbor and return true if destination found
             if (DFS_code(grid, neighbor)) {
-                grid.setTileType(neighbor[0], neighbor[1], Grid.TILE_TYPES.PATH);
+                grid.setTileType(source[0], source[1], Grid.TILE_TYPES.PATH);
                 return true;
             }
         }
+        // return false if dead end found
         return false;
     }
 
