@@ -1,3 +1,5 @@
+import java.util.LinkedList;
+
 /**
  * A class to represent the grid the pathfinding will take place on
  */
@@ -6,11 +8,11 @@ public class Grid {
     // enum of grid tile types
     public enum TILE_TYPES {
         WALL,
-        SOURCE,
-        DESTINATION,
         EMPTY,
         VISITED,
-        PATH
+        PATH,
+        SOURCE,
+        DESTINATION
     }
 
     // the grid we will use for path finding
@@ -132,6 +134,90 @@ public class Grid {
     public void setDestination(int x, int y) {
         this.destination = new int[] {x, y};
         this.setTileType(x, y, TILE_TYPES.DESTINATION);
+    }
+
+    /**
+     * A method to clear any path markings from the grid
+     */
+    public void clearMarkings() {
+        for (int i = 0; i < this.grid.length; i++)
+            for (int j = 0; j < this.grid[0].length; j++)
+                if (this.grid[i][j] == TILE_TYPES.PATH || this.grid[i][j] == TILE_TYPES.VISITED)
+                    this.grid[i][j] = TILE_TYPES.EMPTY;
+    }
+
+    /**
+     * A method to reset the grid to a empty state
+     */
+    public void clearGrid() {
+        this.setupGrid(this.grid.length, this.grid[0].length);
+    }
+
+    // A method to get neighboring vertexes of a given vertex
+    private LinkedList<int[]> getNeighbourWalls(int[] vertex) {
+        LinkedList<int[]> output = new LinkedList<>();
+        // Right
+        if (vertex[0] + 1 < this.getWidth() && this.getTileType(vertex[0] + 1, vertex[1]) == TILE_TYPES.WALL)
+            output.add(new int[] {vertex[0] + 1, vertex[1]});
+        // Left
+        if (vertex[0] > 0 && this.getTileType(vertex[0] - 1, vertex[1]) == TILE_TYPES.WALL)
+            output.add(new int[] {vertex[0] - 1, vertex[1]});
+        // Up
+        if (vertex[1] + 1 < this.getHeight() && this.getTileType(vertex[0], vertex[1] + 1) == TILE_TYPES.WALL)
+            output.add(new int[] {vertex[0], vertex[1] + 1});
+        // Down
+        if (vertex[1] > 0 && this.getTileType(vertex[0], vertex[1] - 1) == TILE_TYPES.WALL)
+            output.add(new int[] {vertex[0], vertex[1] - 1});
+        return output;
+    }
+
+    /**
+     * A method to generate a maze on the grid using a version of Prim's algorithm
+     */
+    public void generateMaze() {
+        // fill the grid with walls
+        for (int i = 0; i < this.getWidth(); i++)
+            for (int j = 0; j < this.getHeight(); j++)
+                this.setTileType(i, j, TILE_TYPES.WALL);
+        // generate a random starting point and set it to empty
+        int[] startPoint = {UtilityMethods.RAND.nextInt(this.getWidth()), UtilityMethods.RAND.nextInt(this.getHeight())};
+        this.setTileType(startPoint[0], startPoint[1], TILE_TYPES.EMPTY);
+        // create a list of walls and add the starting point's walls to it
+        LinkedList<int[]> walls = new LinkedList<>(this.getNeighbourWalls(startPoint));
+        // save the last wall that was removed to set as destination
+        int[] lastWall = null;
+        while (!walls.isEmpty()) {
+            // pick a random wall from the list and remove it
+            int[] wall = walls.remove(UtilityMethods.RAND.nextInt(walls.size()));
+            // check its neighbour tiles
+            TILE_TYPES up = wall[1] + 1 < this.getHeight() ? this.getTileType(wall[0], wall[1] + 1) : null;
+            TILE_TYPES down = wall[1]> 0 ? this.getTileType(wall[0], wall[1] - 1) : null;
+            TILE_TYPES right = wall[0] + 1 < this.getWidth() ? this.getTileType(wall[0] + 1, wall[1]) : null;
+            TILE_TYPES left = wall[0]> 0 ? this.getTileType(wall[0] - 1, wall[1]) : null;
+            // check if we can create a horizontal path
+            if (right != left && (right != null && left != null)) {
+                if (this.getTileType(wall[0] + 1, wall[1]) == TILE_TYPES.WALL)
+                    walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0] + 1, wall[1]}));
+                else walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0] - 1, wall[1]}));
+
+                this.setTileType(wall[0] + 1, wall[1], TILE_TYPES.EMPTY);
+                this.setTileType(wall[0] - 1, wall[1], TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1], TILE_TYPES.EMPTY);
+            }
+            // check if we can create a vertical path
+            if (up != down && (up != null && down != null)) {
+                if (this.getTileType(wall[0], wall[1] + 1) == TILE_TYPES.WALL)
+                    walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0], wall[1] + 1}));
+                else walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0], wall[1] - 1}));
+
+                this.setTileType(wall[0], wall[1] + 1, TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1] - 1, TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1], TILE_TYPES.EMPTY);
+            }
+        }
+        // set start point and source and last wall to destination
+        this.setSource(startPoint[0], startPoint[1]);
+        this.setDestination(lastWall[0], lastWall[1]);
     }
 
     @Override
