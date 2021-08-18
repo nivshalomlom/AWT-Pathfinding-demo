@@ -5,22 +5,15 @@ import java.util.LinkedList;
  */
 public class Grid {
 
-    // enum of grid tile types
-    public enum TILE_TYPES {
-        WALL,
-        EMPTY,
-        VISITED,
-        PATH,
-        SOURCE,
-        DESTINATION
-    }
-
     // the grid we will use for path finding
-    private TILE_TYPES[][] grid;
+    private GridConstants.TILE_TYPES[][] grid;
 
     // source and destination points
     private int[] source;
     private int[] destination;
+
+    // log of actions taken in this grid
+    private LinkedList<String> actionLog;
 
     /**
      * A constructor to create a new grid of given dimensions
@@ -67,10 +60,11 @@ public class Grid {
      * @param tile_type - the type to set the tile to
      * @throws IndexOutOfBoundsException - if the given point (x, y) is not in the grid
      */
-    public void setTileType(int x, int y, TILE_TYPES tile_type) throws IndexOutOfBoundsException {
+    public void setTileType(int x, int y, GridConstants.TILE_TYPES tile_type) throws IndexOutOfBoundsException {
         if (!this.isInGrid(x, y))
             throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
         this.grid[x][y] = tile_type;
+        this.actionLog.add(x + "," + y + "," + tile_type);
     }
 
     /**
@@ -80,7 +74,7 @@ public class Grid {
      * @return the type of the cell in the (x, y) location in the grid
      * @throws IndexOutOfBoundsException - if the given point (x, y) is not in the grid
      */
-    public TILE_TYPES getTileType(int x, int y) {
+    public GridConstants.TILE_TYPES getTileType(int x, int y) {
         if (!this.isInGrid(x, y))
             throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
         return this.grid[x][y];
@@ -91,13 +85,15 @@ public class Grid {
      */
     private void setupGrid(int width, int height) {
         // create a new grid and fill it with empty tiles
-        this.grid = new TILE_TYPES[width][height];
+        this.grid = new GridConstants.TILE_TYPES[width][height];
         for (int i = 0; i < this.getWidth(); i++)
             for (int j = 0; j < this.getHeight(); j++)
-                this.grid[i][j] = TILE_TYPES.EMPTY;
+                this.grid[i][j] = GridConstants.TILE_TYPES.EMPTY;
         // delete source and destination
         this.source = null;
         this.destination = null;
+        // reset log
+        this.actionLog = new LinkedList<>();
     }
 
     /**
@@ -115,7 +111,7 @@ public class Grid {
      */
     public void setSource(int x, int y) {
         this.source = new int[] {x, y};
-        this.setTileType(x, y, TILE_TYPES.SOURCE);
+        this.setTileType(x, y, GridConstants.TILE_TYPES.SOURCE);
     }
 
     /**
@@ -133,7 +129,7 @@ public class Grid {
      */
     public void setDestination(int x, int y) {
         this.destination = new int[] {x, y};
-        this.setTileType(x, y, TILE_TYPES.DESTINATION);
+        this.setTileType(x, y, GridConstants.TILE_TYPES.DESTINATION);
     }
 
     /**
@@ -142,8 +138,8 @@ public class Grid {
     public void clearMarkings() {
         for (int i = 0; i < this.grid.length; i++)
             for (int j = 0; j < this.grid[0].length; j++)
-                if (this.grid[i][j] == TILE_TYPES.PATH || this.grid[i][j] == TILE_TYPES.VISITED)
-                    this.grid[i][j] = TILE_TYPES.EMPTY;
+                if (this.grid[i][j] == GridConstants.TILE_TYPES.PATH || this.grid[i][j] == GridConstants.TILE_TYPES.VISITED)
+                    this.grid[i][j] = GridConstants.TILE_TYPES.EMPTY;
     }
 
     /**
@@ -157,16 +153,16 @@ public class Grid {
     private LinkedList<int[]> getNeighbourWalls(int[] vertex) {
         LinkedList<int[]> output = new LinkedList<>();
         // Right
-        if (vertex[0] + 1 < this.getWidth() && this.getTileType(vertex[0] + 1, vertex[1]) == TILE_TYPES.WALL)
+        if (vertex[0] + 1 < this.getWidth() && this.getTileType(vertex[0] + 1, vertex[1]) == GridConstants.TILE_TYPES.WALL)
             output.add(new int[] {vertex[0] + 1, vertex[1]});
         // Left
-        if (vertex[0] > 0 && this.getTileType(vertex[0] - 1, vertex[1]) == TILE_TYPES.WALL)
+        if (vertex[0] > 0 && this.getTileType(vertex[0] - 1, vertex[1]) == GridConstants.TILE_TYPES.WALL)
             output.add(new int[] {vertex[0] - 1, vertex[1]});
         // Up
-        if (vertex[1] + 1 < this.getHeight() && this.getTileType(vertex[0], vertex[1] + 1) == TILE_TYPES.WALL)
+        if (vertex[1] + 1 < this.getHeight() && this.getTileType(vertex[0], vertex[1] + 1) == GridConstants.TILE_TYPES.WALL)
             output.add(new int[] {vertex[0], vertex[1] + 1});
         // Down
-        if (vertex[1] > 0 && this.getTileType(vertex[0], vertex[1] - 1) == TILE_TYPES.WALL)
+        if (vertex[1] > 0 && this.getTileType(vertex[0], vertex[1] - 1) == GridConstants.TILE_TYPES.WALL)
             output.add(new int[] {vertex[0], vertex[1] - 1});
         return output;
     }
@@ -178,10 +174,10 @@ public class Grid {
         // fill the grid with walls
         for (int i = 0; i < this.getWidth(); i++)
             for (int j = 0; j < this.getHeight(); j++)
-                this.setTileType(i, j, TILE_TYPES.WALL);
+                this.setTileType(i, j, GridConstants.TILE_TYPES.WALL);
         // generate a random starting point and set it to empty
         int[] startPoint = {UtilityMethods.RAND.nextInt(this.getWidth()), UtilityMethods.RAND.nextInt(this.getHeight())};
-        this.setTileType(startPoint[0], startPoint[1], TILE_TYPES.EMPTY);
+        this.setTileType(startPoint[0], startPoint[1], GridConstants.TILE_TYPES.EMPTY);
         // create a list of walls and add the starting point's walls to it
         LinkedList<int[]> walls = new LinkedList<>(this.getNeighbourWalls(startPoint));
         // save the last wall that was removed to set as destination
@@ -190,34 +186,41 @@ public class Grid {
             // pick a random wall from the list and remove it
             int[] wall = walls.remove(UtilityMethods.RAND.nextInt(walls.size()));
             // check its neighbour tiles
-            TILE_TYPES up = wall[1] + 1 < this.getHeight() ? this.getTileType(wall[0], wall[1] + 1) : null;
-            TILE_TYPES down = wall[1]> 0 ? this.getTileType(wall[0], wall[1] - 1) : null;
-            TILE_TYPES right = wall[0] + 1 < this.getWidth() ? this.getTileType(wall[0] + 1, wall[1]) : null;
-            TILE_TYPES left = wall[0]> 0 ? this.getTileType(wall[0] - 1, wall[1]) : null;
+            GridConstants.TILE_TYPES up = wall[1] + 1 < this.getHeight() ? this.getTileType(wall[0], wall[1] + 1) : null;
+            GridConstants.TILE_TYPES down = wall[1]> 0 ? this.getTileType(wall[0], wall[1] - 1) : null;
+            GridConstants.TILE_TYPES right = wall[0] + 1 < this.getWidth() ? this.getTileType(wall[0] + 1, wall[1]) : null;
+            GridConstants.TILE_TYPES left = wall[0]> 0 ? this.getTileType(wall[0] - 1, wall[1]) : null;
             // check if we can create a horizontal path
             if (right != left && (right != null && left != null)) {
-                if (this.getTileType(wall[0] + 1, wall[1]) == TILE_TYPES.WALL)
+                if (this.getTileType(wall[0] + 1, wall[1]) == GridConstants.TILE_TYPES.WALL)
                     walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0] + 1, wall[1]}));
                 else walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0] - 1, wall[1]}));
 
-                this.setTileType(wall[0] + 1, wall[1], TILE_TYPES.EMPTY);
-                this.setTileType(wall[0] - 1, wall[1], TILE_TYPES.EMPTY);
-                this.setTileType(wall[0], wall[1], TILE_TYPES.EMPTY);
+                this.setTileType(wall[0] + 1, wall[1], GridConstants.TILE_TYPES.EMPTY);
+                this.setTileType(wall[0] - 1, wall[1], GridConstants.TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1], GridConstants.TILE_TYPES.EMPTY);
             }
             // check if we can create a vertical path
             if (up != down && (up != null && down != null)) {
-                if (this.getTileType(wall[0], wall[1] + 1) == TILE_TYPES.WALL)
+                if (this.getTileType(wall[0], wall[1] + 1) == GridConstants.TILE_TYPES.WALL)
                     walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0], wall[1] + 1}));
                 else walls.addAll(this.getNeighbourWalls(lastWall = new int[] {wall[0], wall[1] - 1}));
 
-                this.setTileType(wall[0], wall[1] + 1, TILE_TYPES.EMPTY);
-                this.setTileType(wall[0], wall[1] - 1, TILE_TYPES.EMPTY);
-                this.setTileType(wall[0], wall[1], TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1] + 1, GridConstants.TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1] - 1, GridConstants.TILE_TYPES.EMPTY);
+                this.setTileType(wall[0], wall[1], GridConstants.TILE_TYPES.EMPTY);
             }
         }
         // set start point and source and last wall to destination
         this.setSource(startPoint[0], startPoint[1]);
         this.setDestination(lastWall[0], lastWall[1]);
+    }
+
+    /**
+     * A method to clear the action log
+     */
+    public void clearActionLog() {
+        this.actionLog = new LinkedList<>();
     }
 
     @Override

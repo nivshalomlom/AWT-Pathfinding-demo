@@ -52,17 +52,20 @@ public class PathfindingAlgorithms {
     public static boolean DFS(Grid grid) {
         if (grid.getSource() == null || grid.getDestination() == null)
             return false;
-        else return DFS_code(grid, grid.getSource());
+        else {
+            grid.clearActionLog();
+            return DFS_code(grid, grid.getSource());
+        }
     }
 
     // the algorithm recursive code
     private static boolean DFS_code(Grid grid, int[] source) {
         // if destination is found return true
-        if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.DESTINATION)
+        if (grid.getTileType(source[0], source[1]) == GridConstants.TILE_TYPES.DESTINATION)
             return true;
         // else mark tile as visited
-        if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.EMPTY)
-            grid.setTileType(source[0], source[1], Grid.TILE_TYPES.VISITED);
+        if (grid.getTileType(source[0], source[1]) == GridConstants.TILE_TYPES.EMPTY)
+            grid.setTileType(source[0], source[1], GridConstants.TILE_TYPES.VISITED);
         // randomize search order
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         UtilityMethods.shuffleArray(directions);
@@ -70,12 +73,12 @@ public class PathfindingAlgorithms {
         for (DIRECTION direction : directions) {
             int[] neighbor = getNeighbor(source, direction);
             // check neighbor tile is traversable
-            if (!grid.isInGrid(neighbor[0], neighbor[1]) || (grid.getTileType(neighbor[0], neighbor[1]) != Grid.TILE_TYPES.EMPTY && grid.getTileType(neighbor[0], neighbor[1]) != Grid.TILE_TYPES.DESTINATION))
+            if (!grid.isInGrid(neighbor[0], neighbor[1]) || (grid.getTileType(neighbor[0], neighbor[1]) != GridConstants.TILE_TYPES.EMPTY && grid.getTileType(neighbor[0], neighbor[1]) != GridConstants.TILE_TYPES.DESTINATION))
                 continue;
             // go to neighbor and return true if destination found
             if (DFS_code(grid, neighbor)) {
-                if (grid.getTileType(source[0], source[1]) == Grid.TILE_TYPES.VISITED)
-                    grid.setTileType(source[0], source[1], Grid.TILE_TYPES.PATH);
+                if (grid.getTileType(source[0], source[1]) == GridConstants.TILE_TYPES.VISITED)
+                    grid.setTileType(source[0], source[1], GridConstants.TILE_TYPES.PATH);
                 return true;
             }
         }
@@ -89,6 +92,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean BFS(Grid grid) {
+        grid.clearActionLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // empty map for previous vertexes
@@ -116,22 +120,22 @@ public class PathfindingAlgorithms {
                     if (Arrays.equals(current, source))
                         return true;
                     // mark current cell as visited
-                    grid.setTileType(current[0], current[1], Grid.TILE_TYPES.PATH);
+                    grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.PATH);
                 }
             }
             // for neighbor of vertex
             for (DIRECTION direction : directions) {
                 int[] neighbor = getNeighbor(current, direction);
                 // check if neighbor valid
-                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.WALL || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.VISITED)
+                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.WALL || grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.VISITED)
                     continue;
                 // add neighbor to queue
                 vertexQueue.add(neighbor);
                 // set prev of neighbor to current node
                 prev[neighbor[0]][neighbor[1]] = current;
                 // mark as visited if empty
-                if (grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.EMPTY)
-                    grid.setTileType(neighbor[0], neighbor[1], Grid.TILE_TYPES.VISITED);
+                if (grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.EMPTY)
+                    grid.setTileType(neighbor[0], neighbor[1], GridConstants.TILE_TYPES.VISITED);
             }
         }
         // return false if destination not found
@@ -144,6 +148,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean Dijkstra(Grid grid) {
+        grid.clearActionLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // vertex set
@@ -156,7 +161,7 @@ public class PathfindingAlgorithms {
         for (int i = 0; i < grid.getWidth(); i++)
             for (int j = 0; j < grid.getHeight(); j++) {
                 distances[i][j] = Double.POSITIVE_INFINITY;
-                if (grid.getTileType(i, j) != Grid.TILE_TYPES.WALL)
+                if (grid.getTileType(i, j) != GridConstants.TILE_TYPES.WALL)
                     vertexes.add(new int[] {i, j});
             }
         // get the destination and source
@@ -176,8 +181,8 @@ public class PathfindingAlgorithms {
             // remove it from the set
             vertexes.remove(current);
             // mark as visited if empty
-            if (grid.getTileType(current[0], current[1]) == Grid.TILE_TYPES.EMPTY)
-                grid.setTileType(current[0], current[1], Grid.TILE_TYPES.VISITED);
+            if (grid.getTileType(current[0], current[1]) == GridConstants.TILE_TYPES.EMPTY)
+                grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.VISITED);
             // check if destination is reached
             if (Arrays.equals(current, destination)) {
                 while (true) {
@@ -189,14 +194,14 @@ public class PathfindingAlgorithms {
                     if (Arrays.equals(current, source))
                         return true;
                     // mark vertex as path
-                    grid.setTileType(current[0], current[1], Grid.TILE_TYPES.PATH);
+                    grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.PATH);
                 }
             }
             // for each neighbor of the current vertex
             for (DIRECTION direction : directions) {
                 int[] neighbor = getNeighbor(current, direction);
                 // check if its valid
-                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.WALL)
+                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.WALL)
                     continue;
                 // if yes update it's distances if this is a better path
                 double alt = distances[current[0]][current[1]] + 1;
@@ -205,8 +210,8 @@ public class PathfindingAlgorithms {
                     prev[neighbor[0]][neighbor[1]] = current;
                 }
                 // mark as visited if empty
-                if (grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.EMPTY)
-                    grid.setTileType(neighbor[0], neighbor[1], Grid.TILE_TYPES.VISITED);
+                if (grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.EMPTY)
+                    grid.setTileType(neighbor[0], neighbor[1], GridConstants.TILE_TYPES.VISITED);
             }
         }
         // if destination is not reached
@@ -232,6 +237,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean AStar(Grid grid) {
+        grid.clearActionLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // vertex set, initialized with the source
@@ -274,19 +280,19 @@ public class PathfindingAlgorithms {
                     if (Arrays.equals(current, source))
                         return true;
                     // mark vertex as path
-                    grid.setTileType(current[0], current[1], Grid.TILE_TYPES.PATH);
+                    grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.PATH);
                 }
             }
             // remove current vertex from vertex set
             vertexes.remove(current);
             // mark as visited if empty
-            if (grid.getTileType(current[0], current[1]) == Grid.TILE_TYPES.EMPTY)
-                grid.setTileType(current[0], current[1], Grid.TILE_TYPES.VISITED);
+            if (grid.getTileType(current[0], current[1]) == GridConstants.TILE_TYPES.EMPTY)
+                grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.VISITED);
             // expand current vertex neighbours
             for (DIRECTION direction : directions) {
                 int[] neighbor = getNeighbor(current, direction);
                 // check if neighbor valid
-                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == Grid.TILE_TYPES.WALL)
+                if (!grid.isInGrid(neighbor[0], neighbor[1]) || grid.getTileType(neighbor[0], neighbor[1]) == GridConstants.TILE_TYPES.WALL)
                     continue;
                 // check if alternative path to neighbor is better
                 double alt = gDistances[current[0]][current[1]] + 1;
@@ -299,8 +305,8 @@ public class PathfindingAlgorithms {
                     // then add it to the vertex set
                     vertexes.add(neighbor);
                     // mark as visited if empty
-                    if (grid.getTileType(current[0], current[1]) == Grid.TILE_TYPES.EMPTY)
-                        grid.setTileType(current[0], current[1], Grid.TILE_TYPES.VISITED);
+                    if (grid.getTileType(current[0], current[1]) == GridConstants.TILE_TYPES.EMPTY)
+                        grid.setTileType(current[0], current[1], GridConstants.TILE_TYPES.VISITED);
                 }
             }
         }
