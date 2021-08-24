@@ -12,5 +12,6 @@
     <orderEntry type="jdk" jdkName="14" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="BackEnd" />
+    <orderEntry type="module" module-name="Constants" />
   </component>
 </module>

@@ -1,11 +1,13 @@
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
 
-public class GridGUI extends Frame {
+public class GridGUI extends ScrollPane {
+
+    private static final int width = 600;
+    private static final int height = 600;
 
     // The canvas to draw the grid on
     private GridCanvas gridCanvas;
@@ -18,15 +20,19 @@ public class GridGUI extends Frame {
     public GridGUI(int gridWidth, int gridHeight) {
         // Initialize the grid canvas
         this.gridCanvas = new GridCanvas(gridWidth, gridHeight);
-        this.add(this.gridCanvas);
-        // Create listener for close button
-        this.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                dispose();
+        this.gridCanvas.setSize((GridConstants.tileWidth + 1) * gridWidth + 1, (GridConstants.tileHeight + 1) * gridHeight + 1);
+        this.add(gridCanvas);
+        // Disable mouse wheel scrolling
+        this.setWheelScrollingEnabled(false);
+        // Bind mouse wheel to zoom
+        this.addMouseWheelListener(new MouseAdapter() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                gridCanvas.updateZoom(((int)-e.getPreciseWheelRotation()) * 0.1);
             }
         });
         // Set window size
-        this.setSize(GridConstants.tileWidth * gridWidth, GridConstants.tileHeight * gridHeight);
+        this.setSize(width, height);
     }
 
     /**
@@ -44,6 +50,9 @@ public class GridGUI extends Frame {
         // The grid this ui is showing
         private Grid grid;
 
+        private double zoom;
+
+        // Grid width and height
         private final int gridWidth;
         private final int gridHeight;
 
@@ -63,6 +72,7 @@ public class GridGUI extends Frame {
             this.gridWidth = gridWidth;
             this.gridHeight = gridHeight;
             this.tiles = new HashMap<>();
+            this.zoom = 1;
             // Initialize the grid
             this.grid = new Grid(gridWidth, gridHeight);
             // Set drawing option to wall (default)
@@ -71,24 +81,30 @@ public class GridGUI extends Frame {
             this.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    // scale coordinates
-                    int x = (e.getX() / GridConstants.tileWidth) * GridConstants.tileWidth + 1;
-                    int y = (e.getY() / GridConstants.tileHeight) * GridConstants.tileHeight + 1;
-                    // create a new point
-                    Point key = new Point(x, y);
-                    // update dictionary accordingly
-                    if (tiles.containsKey(key))
-                        tiles.remove(key);
-                    else
-                        tiles.put(key, currentlyDrawing);
-                    // update canvas
-                    repaint();
+                    // scale coordinates and create a new point
+                    int x = (int) (e.getX() / (GridConstants.tileWidth * zoom));
+                    int y = (int) (e.getY() / (GridConstants.tileHeight * zoom));
+                    // check point is valid
+                    if (grid.isInGrid(x, y)) {
+                        Point key = new Point(x * GridConstants.tileWidth + 1, y * GridConstants.tileHeight + 1);
+                        // update dictionary accordingly
+                        if (tiles.containsKey(key)) {
+                            tiles.remove(key);
+                            grid.setTileType(x, y, GridConstants.TILE_TYPES.EMPTY);
+                        }
+                        else {
+                            tiles.put(key, currentlyDrawing);
+                            grid.setTileType(x, y, currentlyDrawing);
+                        }
+                        // update canvas
+                        repaint();
+                    }
                 }
             });
         }
 
-        @Override
-        public void paint(Graphics g) {
+        // A method to draw the grid pattern on the canvas
+        private void drawGridPattern(Graphics2D g2d) {
             // The grid limits
             int maxHeight = GridConstants.tileHeight * this.gridHeight;
             int maxWidth = GridConstants.tileWidth * this.gridWidth;
@@ -98,25 +114,41 @@ public class GridGUI extends Frame {
             // Draw vertical lines
             for (int i = 0; i < verticalLineCount; i++) {
                 int x = GridConstants.tileWidth * i;
-                g.drawLine(x, 0, x, maxHeight);
+                g2d.drawLine(x, 0, x, maxHeight);
             }
             // Draw horizontal lines
             for (int i = 0; i < horizontalLineCount; i++) {
                 int y = GridConstants.tileHeight * i;
-                g.drawLine(0, y, maxWidth, y);
+                g2d.drawLine(0, y, maxWidth, y);
             }
+        }
+
+        // A method to fill all relevant tiles
+        private void fillTiles(Graphics2D g2d) {
             // Check the tile map if any tile is present on the grid
             for (Point p : this.tiles.keySet()) {
                 // If yes color that tile accordingly
                 switch (this.tiles.get(p)) {
-                    case WALL -> g.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.WALL));
-                    case SOURCE -> g.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.SOURCE));
-                    case DESTINATION -> g.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.DESTINATION));
-                    case VISITED -> g.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.VISITED));
-                    case PATH -> g.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.PATH));
+                    case WALL -> g2d.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.WALL));
+                    case SOURCE -> g2d.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.SOURCE));
+                    case DESTINATION -> g2d.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.DESTINATION));
+                    case VISITED -> g2d.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.VISITED));
+                    case PATH -> g2d.setColor(GridConstants.tileColors.get(GridConstants.TILE_TYPES.PATH));
                 }
-                g.fillRect((int)p.getX(), (int)p.getY(), GridConstants.tileWidth - 1, GridConstants.tileHeight - 1);
+                g2d.fillRect((int)p.getX(), (int)p.getY(), GridConstants.tileWidth - 1, GridConstants.tileHeight - 1);
             }
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            // Convert to 2d
+            Graphics2D g2d = ((Graphics2D)g);
+            // Set zoom scaling
+            g2d.scale(zoom, zoom);
+            // Draw grid patterns
+            this.drawGridPattern(g2d);
+            // Fill all relevant tiles
+            this.fillTiles(g2d);
         }
 
         /**
@@ -147,6 +179,18 @@ public class GridGUI extends Frame {
         public void generateMaze() {
             this.grid.generateMaze();
             this.readGrid();
+        }
+
+        public void updateZoom(double zoom) {
+            this.zoom += zoom;
+            if (this.zoom < 0)
+                this.zoom = 0;
+            this.repaint();
+        }
+
+        public void resetZoom() {
+            this.zoom = 1;
+            this.repaint();
         }
 
     }

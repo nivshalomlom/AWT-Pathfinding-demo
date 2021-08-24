@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/AWT-Pathfinding-demo.iml" filepath="$PROJECT_DIR$/.idea/AWT-Pathfinding-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/BackEnd/BackEnd.iml" filepath="$PROJECT_DIR$/BackEnd/BackEnd.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Constants/Constants.iml" filepath="$PROJECT_DIR$/Constants/Constants.iml" />
       <module fileurl="file://$PROJECT_DIR$/FrontEnd/FrontEnd.iml" filepath="$PROJECT_DIR$/FrontEnd/FrontEnd.iml" />
     </modules>
   </component>

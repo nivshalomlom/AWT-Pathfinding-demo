@@ -1,3 +1,6 @@
+import java.awt.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 /**
@@ -5,15 +8,15 @@ import java.util.LinkedList;
  */
 public class Grid {
 
-    // the grid we will use for path finding
+    // The grid we will use for path finding
     private GridConstants.TILE_TYPES[][] grid;
 
-    // source and destination points
+    // Source and destination points
     private int[] source;
     private int[] destination;
 
-    // log of actions taken in this grid
-    private LinkedList<String> actionLog;
+    // An ordered log of tiles marked as path / visited
+    private LinkedHashMap<Point, GridConstants.TILE_TYPES> visitorLog;
 
     /**
      * A constructor to create a new grid of given dimensions
@@ -64,7 +67,9 @@ public class Grid {
         if (!this.isInGrid(x, y))
             throw new IndexOutOfBoundsException("(" + x + ", " + y + ") is not in the grid!");
         this.grid[x][y] = tile_type;
-        this.actionLog.add(x + "," + y + "," + tile_type);
+        // update visitor log id needed
+        if (tile_type == GridConstants.TILE_TYPES.VISITED || tile_type == GridConstants.TILE_TYPES.PATH)
+            this.visitorLog.put(new Point(x, y), tile_type);
     }
 
     /**
@@ -92,8 +97,8 @@ public class Grid {
         // delete source and destination
         this.source = null;
         this.destination = null;
-        // reset log
-        this.actionLog = new LinkedList<>();
+        // create log
+        this.visitorLog = new LinkedHashMap<>();
     }
 
     /**
@@ -217,10 +222,18 @@ public class Grid {
     }
 
     /**
-     * A method to clear the action log
+     * A method to get of all nodes visited or marked as path
+     * @return the log
      */
-    public void clearActionLog() {
-        this.actionLog = new LinkedList<>();
+    public LinkedHashMap<Point, GridConstants.TILE_TYPES> getVisitorLog() {
+        return this.visitorLog;
+    }
+
+    /**
+     * A method to clear the visitor log
+     */
+    public void clearVisitorLog() {
+        this.visitorLog.clear();
     }
 
     @Override

@@ -5,8 +5,8 @@ import java.util.Hashtable;
 public class GridConstants {
 
     // each tile's width and height
-    public final static int tileWidth = 50;
-    public final static int tileHeight = 50;
+    public final static int tileWidth = 30;
+    public final static int tileHeight = 30;
 
     // enum of grid tile types
     public enum TILE_TYPES {

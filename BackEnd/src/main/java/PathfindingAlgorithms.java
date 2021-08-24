@@ -1,4 +1,7 @@
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * A class that contains implementations of pathfinding algorithms
@@ -53,7 +56,7 @@ public class PathfindingAlgorithms {
         if (grid.getSource() == null || grid.getDestination() == null)
             return false;
         else {
-            grid.clearActionLog();
+            grid.clearVisitorLog();
             return DFS_code(grid, grid.getSource());
         }
     }
@@ -92,7 +95,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean BFS(Grid grid) {
-        grid.clearActionLog();
+        grid.clearVisitorLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // empty map for previous vertexes
@@ -148,7 +151,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean Dijkstra(Grid grid) {
-        grid.clearActionLog();
+        grid.clearVisitorLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // vertex set
@@ -237,7 +240,7 @@ public class PathfindingAlgorithms {
      * @return true if found path, false otherwise (marks path on grid if found)
      */
     public static boolean AStar(Grid grid) {
-        grid.clearActionLog();
+        grid.clearVisitorLog();
         // all possible search directions
         DIRECTION[] directions = {DIRECTION.UP, DIRECTION.DOWN, DIRECTION.LEFT, DIRECTION.RIGHT};
         // vertex set, initialized with the source
