@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
@@ -16,7 +15,7 @@ public class Grid {
     private int[] destination;
 
     // An ordered log of tiles marked as path / visited
-    private LinkedHashMap<Point, GridConstants.TILE_TYPES> visitorLog;
+    private LinkedList<GridConstants.Visitor> visitorLog;
 
     /**
      * A constructor to create a new grid of given dimensions
@@ -69,7 +68,12 @@ public class Grid {
         this.grid[x][y] = tile_type;
         // update visitor log id needed
         if (tile_type == GridConstants.TILE_TYPES.VISITED || tile_type == GridConstants.TILE_TYPES.PATH)
-            this.visitorLog.put(new Point(x, y), tile_type);
+            this.visitorLog.add(new GridConstants.Visitor(new Point(x, y), tile_type));
+        // update source / destination if needed
+        if (tile_type == GridConstants.TILE_TYPES.SOURCE)
+            this.source = new int[] {x, y};
+        else if (tile_type == GridConstants.TILE_TYPES.DESTINATION)
+            this.destination = new int[] {x, y};
     }
 
     /**
@@ -98,7 +102,7 @@ public class Grid {
         this.source = null;
         this.destination = null;
         // create log
-        this.visitorLog = new LinkedHashMap<>();
+        this.visitorLog = new LinkedList<>();
     }
 
     /**
@@ -225,7 +229,7 @@ public class Grid {
      * A method to get of all nodes visited or marked as path
      * @return the log
      */
-    public LinkedHashMap<Point, GridConstants.TILE_TYPES> getVisitorLog() {
+    public LinkedList<GridConstants.Visitor> getVisitorLog() {
         return this.visitorLog;
     }
 
@@ -246,4 +250,5 @@ public class Grid {
         }
         return output.toString();
     }
+
 }

@@ -1,16 +1,19 @@
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.function.Consumer;
 
-public class GridGUI extends ScrollPane {
+public class GridGUI extends Panel {
 
     private static final int width = 600;
     private static final int height = 600;
 
     // The canvas to draw the grid on
-    private GridCanvas gridCanvas;
+    private final GridCanvas gridCanvas;
 
     /**
      * A constructor to build a new GridGUI Frame
@@ -21,9 +24,72 @@ public class GridGUI extends ScrollPane {
         // Initialize the grid canvas
         this.gridCanvas = new GridCanvas(gridWidth, gridHeight);
         this.gridCanvas.setSize((GridConstants.tileWidth + 1) * gridWidth + 1, (GridConstants.tileHeight + 1) * gridHeight + 1);
-        this.add(gridCanvas);
+        // Create scroll pane
+        ScrollPane scrollGrid = new ScrollPane();
+        scrollGrid.setSize(width, height);
         // Disable mouse wheel scrolling
-        this.setWheelScrollingEnabled(false);
+        scrollGrid.setWheelScrollingEnabled(false);
+        // Add the canvas
+        scrollGrid.add(this.gridCanvas);
+        this.add(scrollGrid);
+        // Create algorithm dropdown menu
+        JComboBox<String> algorithmsMenu = new JComboBox<>();
+        algorithmsMenu.addItem("AStar");
+        algorithmsMenu.addItem("Dijkstra");
+        algorithmsMenu.addItem("DFS");
+        algorithmsMenu.addItem("BFS");
+        this.add(algorithmsMenu);
+        // Create control buttons
+        Button solveBtn = new Button("solve");
+        Button genMazeBtn = new Button("generate maze");
+        Button clearBtn = new Button("clear grid");
+        // Add button functions
+        solveBtn.addActionListener(e -> {
+            int index = algorithmsMenu.getSelectedIndex();
+            if (index == 0)
+                this.gridCanvas.solve(PathfindingAlgorithms::AStar);
+            else if (index == 1)
+                this.gridCanvas.solve(PathfindingAlgorithms::Dijkstra);
+            else if (index == 2)
+                this.gridCanvas.solve(PathfindingAlgorithms::DFS);
+            else if (index == 3)
+                this.gridCanvas.solve(PathfindingAlgorithms::BFS);
+        });
+        genMazeBtn.addActionListener(e -> {
+            this.gridCanvas.generateMaze();
+        });
+        clearBtn.addActionListener(e -> {
+            this.gridCanvas.clear();
+        });
+
+        Label label = new Label("Currently drawing:");
+        JComboBox<String> drawSelection = new JComboBox<>();
+        drawSelection.addItem("Wall");
+        drawSelection.addItem("Source");
+        drawSelection.addItem("Destination");
+
+        drawSelection.addActionListener(e -> {
+            int index = drawSelection.getSelectedIndex();
+            if (index == 0)
+                this.gridCanvas.setCurrentlyDrawing(GridConstants.TILE_TYPES.WALL);
+            else if (index == 1)
+                this.gridCanvas.setCurrentlyDrawing(GridConstants.TILE_TYPES.SOURCE);
+            else if (index == 2)
+                this.gridCanvas.setCurrentlyDrawing(GridConstants.TILE_TYPES.DESTINATION);
+        });
+
+        // Add buttons to panel
+        Panel controlPanel = new Panel();
+        controlPanel.add(solveBtn);
+        controlPanel.add(genMazeBtn);
+        controlPanel.add(clearBtn);
+        controlPanel.add(label);
+        controlPanel.add(drawSelection);
+        // Configure grid layout and add to main gui
+        controlPanel.setLayout(new GridLayout(2, 3));
+        this.add(controlPanel);
+        // Set layout as grid
+        this.setLayout(new GridLayout(3, 1));
         // Bind mouse wheel to zoom
         this.addMouseWheelListener(new MouseAdapter() {
             @Override
@@ -48,9 +114,13 @@ public class GridGUI extends ScrollPane {
     private static class GridCanvas extends Canvas {
 
         // The grid this ui is showing
-        private Grid grid;
+        private final Grid grid;
 
+        // The zoom level
         private double zoom;
+
+        // Timer for animations
+        private Timer timer;
 
         // Grid width and height
         private final int gridWidth;
@@ -191,6 +261,51 @@ public class GridGUI extends ScrollPane {
         public void resetZoom() {
             this.zoom = 1;
             this.repaint();
+        }
+
+        /**
+         * A method to solve the given grid and show a animation of the result
+         * @param pathfindingAlgorithm - the algorithm the use
+         */
+        public void solve(Consumer<Grid> pathfindingAlgorithm) {
+            pathfindingAlgorithm.accept(this.grid);
+            // get the log of visited notes
+            Iterator<GridConstants.Visitor> pointIterator = this.grid.getVisitorLog().iterator();
+            // set a timer for every 100 milliseconds
+            this.timer =  new Timer(100, e -> {
+                // get next visitor
+                GridConstants.Visitor visitor = pointIterator.next();
+                // get and scale the point to the grid
+                Point p = visitor.getPoint();
+                p.setLocation(p.getX() * GridConstants.tileWidth + 1, p.getY() * GridConstants.tileHeight + 1);
+                // add to tile map
+                tiles.put(p, visitor.getType());
+                // update canvas
+                repaint();
+                // restart timer if needed
+                if (pointIterator.hasNext())
+                    timer.restart();
+                else timer.stop();
+            });
+            //start the timer
+            this.timer.start();
+
+        }
+
+        /**
+         * A method completely clean the grid
+         */
+        public void clear() {
+            this.grid.clearGrid();
+            this.readGrid();
+        }
+
+        /**
+         * A method to clear only path and visited markings of the grid
+         */
+        public void clearMarkings() {
+            this.grid.clearMarkings();
+            this.readGrid();
         }
 
     }
