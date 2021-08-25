@@ -43,6 +43,7 @@ public class GridGUI extends Panel {
         Button solveBtn = new Button("solve");
         Button genMazeBtn = new Button("generate maze");
         Button clearBtn = new Button("clear grid");
+        Button clearMarkingsBtn = new Button("clear markings");
         // Add button functions
         solveBtn.addActionListener(e -> {
             int index = algorithmsMenu.getSelectedIndex();
@@ -55,19 +56,16 @@ public class GridGUI extends Panel {
             else if (index == 3)
                 this.gridCanvas.solve(PathfindingAlgorithms::BFS);
         });
-        genMazeBtn.addActionListener(e -> {
-            this.gridCanvas.generateMaze();
-        });
-        clearBtn.addActionListener(e -> {
-            this.gridCanvas.clear();
-        });
-
+        genMazeBtn.addActionListener(e -> this.gridCanvas.generateMaze());
+        clearBtn.addActionListener(e -> this.gridCanvas.clear());
+        clearMarkingsBtn.addActionListener(e -> this.gridCanvas.clearMarkings());
+        // Add drawing controls
         Label label = new Label("Currently drawing:");
         JComboBox<String> drawSelection = new JComboBox<>();
         drawSelection.addItem("Wall");
         drawSelection.addItem("Source");
         drawSelection.addItem("Destination");
-
+        // Set up the combo box actions
         drawSelection.addActionListener(e -> {
             int index = drawSelection.getSelectedIndex();
             if (index == 0)
@@ -77,12 +75,12 @@ public class GridGUI extends Panel {
             else if (index == 2)
                 this.gridCanvas.setCurrentlyDrawing(GridConstants.TILE_TYPES.DESTINATION);
         });
-
         // Add buttons to panel
         Panel controlPanel = new Panel();
         controlPanel.add(solveBtn);
         controlPanel.add(genMazeBtn);
         controlPanel.add(clearBtn);
+        controlPanel.add(clearMarkingsBtn);
         controlPanel.add(label);
         controlPanel.add(drawSelection);
         // Configure grid layout and add to main gui
